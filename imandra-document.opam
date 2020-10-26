@@ -1,0 +1,21 @@
+opam-version: "2.0"
+name: "imandra-document"
+synopsis: "Imandra document library"
+version: "1.0.5"
+maintainer: "Grant Passmore <grant@aestheticintegration.com>"
+authors: "Grant Passmore <grant@aestheticintegration.com>"
+homepage: "http://www.imandra.ai/"
+bug-reports: "Grant Passmore <grant@aestheticintegration.com>"
+dev-repo: "git://github.com/AestheticIntegration/imandra-document.git"
+build: [
+  ["dune" "build" "-p" name "-j" jobs]
+]
+depends: [
+  "dune" { >= "1.1" }
+  "zarith"
+  "containers" { >= "3.0" & < "4.0" }
+  "base-bytes"
+  "octavius"
+  "ocaml" { >= "4.08" & < "4.09" }
+  "tyxml"
+]
