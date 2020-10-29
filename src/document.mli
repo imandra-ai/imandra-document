@@ -317,6 +317,9 @@ val pp_ocamldoc_see_ref : Format.formatter -> ocamldoc_see_ref -> unit
 
 val to_string : t -> string
 
+(** Print to HTML *)
+val to_string_html : t -> string
+
 (** {2 Parsing} *)
 
 (** We use {{: https://github.com/ocaml-doc/octavius/} Octavius} to
