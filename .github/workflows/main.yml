@@ -10,7 +10,7 @@ jobs:
         ocaml-version: [ '4.08.1' ]
     steps:
     - uses: actions/checkout@master
-    - uses: avsm/setup-ocaml@master
+    - uses: avsm/setup-ocaml@v1.1.3
       with:
         ocaml-version: ${{ matrix.ocaml-version }}
     - run: opam pin -n .
