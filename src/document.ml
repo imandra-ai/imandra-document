@@ -411,7 +411,7 @@ module H = Tyxml.Html
 type 'a html = ([> Html_types.div] as 'a) H.elt
 
 (* adapted from jymandra *)
-let to_basic_html (doc:t) : _ H.elt =
+let to_html_elt (doc:t) : _ H.elt =
   let mk_header ?a ~depth l : _ html = match depth with
     | 1 -> H.h1 ?a l
     | 2 -> H.h2 ?a l
@@ -457,17 +457,17 @@ let to_basic_html (doc:t) : _ H.elt =
         headers
         |> CCOpt.map (fun row ->
             H.thead [
-              H.tr ~a:[H.a_class ["row"]] @@
+              H.tr @@
               List.map
-                (fun s -> H.th ~a:[H.a_class ["col-md-auto"; "m-1"; "p-1"]] [H.txt s])
+                (fun s -> H.th ~a:[H.a_class ["m-1"; "p-1"]] [H.txt s])
                 row
             ])
       and rows =
         rows
         |> List.map (fun row ->
-            H.tr ~a:[H.a_class ["row"]] @@
+            H.tr @@
             List.map
-              (fun s -> H.td ~a:[H.a_class ["col-md-auto"; "m-1"; "p-1"]] [aux ~depth s])
+              (fun s -> H.td ~a:[H.a_class ["m-1"; "p-1"]] [aux ~depth s])
               row
           )
       in
@@ -500,8 +500,8 @@ let to_basic_html (doc:t) : _ H.elt =
     | Fold { folded_by_default; summary=sum; sub=d' } ->
       H.details
         (H.summary [H.txt sum])
-        ~a:(if folded_by_default then [] else [H.a_open()])
-        [ H.div ~a:[H.a_class ["container";"p-2";"m-2"]] [aux ~depth d'] ]
+        ~a:((if folded_by_default then [] else [H.a_open()])@[H.a_class["summary"]])
+        [aux ~depth d']
     | Alternatives {views=vs; _} ->
       (* TODO : do better than a list. maybe a web component for tabs,
          defined in a prelude above? *)
@@ -532,5 +532,30 @@ let to_basic_html (doc:t) : _ H.elt =
   in
   H.div [aux ~depth:3 doc]
 
-let to_string_html d : string =
-  Fmt.asprintf "%a@." (Tyxml.Html.pp_elt()) (to_basic_html d)
+let to_html_doc ?(title="doc") ?meta:(my_meta=[]) (doc:t) : H.doc =
+  let style0 =
+    let l = [
+      "table.framed { border: 2px solid black; }";
+      "table.framed th, table.framed td { border: 1px solid black; }";
+      "th, td { padding: 3px; }";
+    ] in
+    H.style (CCList.map H.txt l)
+  in
+  let b_style = H.link ~rel:[`Stylesheet]
+      ~href:"https://maxcdn.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" ()
+  in
+  H.html
+    (H.head (H.title @@ H.txt title) [
+        style0;
+        b_style;
+        H.meta ~a:(H.a_charset "utf-8" :: my_meta) ();
+      ])
+    (H.body [
+        H.div ~a:[H.a_class ["container"]] [to_html_elt doc]
+      ])
+
+let to_string_html_elt d : string =
+  Fmt.asprintf "%a@." (Tyxml.Html.pp_elt()) (to_html_elt d)
+
+let to_string_html_doc ?title ?meta d : string =
+  Fmt.asprintf "%a@." (Tyxml.Html.pp()) (to_html_doc ?title ?meta d)
