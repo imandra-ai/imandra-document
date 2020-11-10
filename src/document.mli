@@ -203,8 +203,11 @@ val graphviz : ?a:attributes -> string -> t
     ]}
 *)
 
-val bold : t -> t
-(** use bold style on the document *)
+val bold : ?a:attributes -> t -> t
+(** Use bold style on the document *)
+
+val italic : ?a:attributes -> t -> t
+(** Use italic style on the document *)
 
 val tag : ?a:attributes -> ocamldoc_tag -> t
 (** Add an OCamldoc tag *)
