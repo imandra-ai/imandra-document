@@ -320,6 +320,22 @@ val pp_ocamldoc_see_ref : Format.formatter -> ocamldoc_see_ref -> unit
 
 val to_string : t -> string
 
+module H = Tyxml.Html
+
+val to_html_elt : t -> [> Html_types.div ] H.elt
+val to_string_html_elt : t -> string
+
+val to_html_doc :
+  ?title:string ->
+  ?meta:[< Html_types.meta_attrib > `Charset ] H.attrib list ->
+  t -> H.doc
+
+val to_string_html_doc :
+  ?title:string ->
+  ?meta:[< Html_types.meta_attrib > `Charset ] H.attrib list ->
+  t -> string
+(** Toplevel document *)
+
 (** {2 Parsing} *)
 
 (** We use {{: https://github.com/ocaml-doc/octavius/} Octavius} to
@@ -330,4 +346,5 @@ val of_string_exn : string -> t
 (** Unsafe alias to {!of_string}
     @raise Failure if the string does not parse *)
 
+(* TODO: parse from ocamldoc using Octavius *)
 (* TODO: json conversion *)
