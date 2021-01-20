@@ -2,6 +2,6 @@
  (name imandra_document)
  (public_name imandra-document)
  (wrapped true)
- (libraries bytes zarith containers octavius tyxml)
+ (libraries zarith containers tyxml)
  (modes byte native)
- (flags (:standard -w +a-4-29-42-44-48-50-58-32-60@8 -safe-string)))
+ (flags (:standard -safe-string)))

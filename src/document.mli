@@ -209,6 +209,8 @@ val bold : ?a:attributes -> t -> t
 val italic : ?a:attributes -> t -> t
 (** Use italic style on the document *)
 
+val verbatim : ?a:attributes -> string -> t
+
 val tag : ?a:attributes -> ocamldoc_tag -> t
 (** Add an OCamldoc tag *)
 
@@ -335,16 +337,3 @@ val to_string_html_doc :
   ?meta:[< Html_types.meta_attrib > `Charset ] H.attrib list ->
   t -> string
 (** Toplevel document *)
-
-(** {2 Parsing} *)
-
-(** We use {{: https://github.com/ocaml-doc/octavius/} Octavius} to
-    parse OCamldoc markup into a document. *)
-val of_string : string -> (t, string) result
-
-val of_string_exn : string -> t
-(** Unsafe alias to {!of_string}
-    @raise Failure if the string does not parse *)
-
-(* TODO: parse from ocamldoc using Octavius *)
-(* TODO: json conversion *)
