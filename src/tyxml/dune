@@ -2,4 +2,5 @@
 (library
   (name imandra_document_tyxml)
   (public_name imandra-document.tyxml)
+  (optional)
   (libraries imandra-document tyxml))
