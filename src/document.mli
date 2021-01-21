@@ -83,7 +83,9 @@ type view =
     } (** Alternative views on something. These views are mutually exclusive
           and each one has its own label. *)
   | Regions of region list (** Special view for decomposition (see {!region}) *)
-  | Html of [`Div] Tyxml.Html.elt
+  | Html of html
+
+and html = private string
 
 (** OCamldoc-specific "see" reference. *)
 and ocamldoc_see_ref =
@@ -239,7 +241,7 @@ val alternatives : ?a:attributes -> (string * t) list -> t
 val regions : region list -> t
 (** Decomposition regions *)
 
-val html : [`Div] Tyxml.Html.elt -> t
+val html : html -> t
 (** html string for UI display *)
 
 val record : ?a:attributes -> (string * t) list -> t
@@ -322,18 +324,6 @@ val pp_ocamldoc_see_ref : Format.formatter -> ocamldoc_see_ref -> unit
 
 val to_string : t -> string
 
-module H = Tyxml.Html
-
-val to_html_elt : t -> [> Html_types.div ] H.elt
-val to_string_html_elt : t -> string
-
-val to_html_doc :
-  ?title:string ->
-  ?meta:[< Html_types.meta_attrib > `Charset ] H.attrib list ->
-  t -> H.doc
-
-val to_string_html_doc :
-  ?title:string ->
-  ?meta:[< Html_types.meta_attrib > `Charset ] H.attrib list ->
-  t -> string
-(** Toplevel document *)
+module Unsafe_ : sig
+  val html_of_string : string -> html
+end
