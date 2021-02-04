@@ -52,7 +52,9 @@ type view =
       views: (string * t) list; (** possible ways of representing the same thing *)
     }
   | Regions of region list
-  | Html of [`Div] Tyxml.Html.elt
+  | Html of html
+
+and html = string
 
 and ocamldoc_see_ref =
   | See_url of string
@@ -102,6 +104,7 @@ let section ?a s = mk_ ?a @@ Section s
 let section_f ?a s = ksprintf ~f:(section ?a) s
 let paragraph ?a s = mk_ ?a @@ Text s
 let paragraph_f ?a s = ksprintf ~f:(paragraph ?a) s
+let s_ ?a str = mk_ ?a @@ String str
 let s str = mk_ @@ String str
 let s_f str = ksprintf ~f:s str
 let int i = s (string_of_int i)
@@ -123,7 +126,7 @@ let tbl ?a ?headers rows = mk_ ?a @@ Tbl {headers; rows}
 let tbl_of ?a ?headers f l = tbl ?a ?headers @@ List.map (List.map f) l
 let tbl_of_rows ?a ?headers f l = tbl ?a ?headers @@ List.map f l
 let graphviz ?a s = mk_ ?a @@ Graphviz s
-let verbatim txt = s txt
+let verbatim ?a txt = s_ ?a txt
 let italic ?a x = mk_ ?a @@ Italic x
 let bold ?a d = mk_ ?a @@ Bold d
 let tag ?a tag = mk_ ?a @@ OCamldoc_tag tag
@@ -136,10 +139,8 @@ let alternatives ?a l =
   | [] -> empty
   | [_,x] -> x
   | _ -> mk_ ?a @@ Alternatives {views=l}
-let regions l =
-  mk_ @@ Regions l
-let html s =
-  mk_ @@ Html s
+let regions l = mk_ @@ Regions l
+let html h = mk_ @@ Html h
 
 let record ?a l = tbl_of_rows ?a (fun (k,v) -> [bold (s k); v]) l
 
@@ -246,7 +247,7 @@ and pp_content out d = match view d with
     in
     Fmt.fprintf out "(@[<v>Regions@ %a@])"
       Fmt.(list ~sep:(return "@\n") pp_region) rgs
-  | Html html -> Format.fprintf out "@[%a@]" (Tyxml.Html.pp_elt ()) html
+  | Html html -> Format.fprintf out "@[<hv>```html@,%s@,```@]" (html:>string)
 
 and pp_ocamldoc_tag out = function
   | OT_canonical s -> Fmt.fprintf out "@@canonical %s" s
@@ -319,244 +320,6 @@ module Graph = struct
     graphviz ?a (Buffer.contents buf)
 end
 
-(** {2 Parsing} *)
-
-let of_octavius (d:Octavius.Types.t) : t =
-  let module T = Octavius.Types in
-  let rec aux_t (txt,tags) =
-    let doc = aux_txt txt in
-    let tags = List.map aux_tag tags in
-    match tags with
-    | [] -> doc
-    | _ -> block (doc :: tags)
-  and aux_txt (t:T.text) : t =
-    (* split into paragraphs *)
-    let rec group_paragraphs acc cur_para = function
-      | [] -> List.rev (List.rev cur_para :: acc)
-      | T.Newline :: tail ->
-        (* new paragraph *)
-        group_paragraphs (List.rev cur_para :: acc) [] tail
-      | x :: tail ->
-        let x = aux_txt_elt x in
-        group_paragraphs acc (x::cur_para) tail
-    in
-    match group_paragraphs [] [] t with
-    | [] -> block[]
-    | [p] -> block p
-    | pars -> v_block (List.map block pars)
-  and aux_txt_elt (t:T.text_element) : t =
-    match t with
-    | T.Raw txt ->
-      (* remove newlines, like in LaTeX *)
-      p @@ CCString.map (function '\n' -> ' ' | c->c) txt
-    | T.Code txt -> pre txt
-    | T.PreCode txt -> pre txt
-    | T.Verbatim txt -> verbatim txt
-    | T.Style (st,t) ->
-      begin match st with
-        | T.SK_bold -> bold (aux_txt t)
-        | T.SK_italic | T.SK_emphasize | T.SK_center | T.SK_left
-        | T.SK_right | T.SK_superscript | T.SK_subscript | T.SK_custom _ ->
-          aux_txt t
-      end
-    | T.List l -> list (List.map aux_txt l)
-    | T.Enum l -> enum (List.map aux_txt l)
-    | T.Newline -> assert false
-    | T.Title (_,_,d) ->
-      (* convert title into a string *)
-      section (Format.asprintf "@[<h>%a@]" pp @@ aux_txt d)
-    | T.Ref (T.RK_link,d,Some txt) -> url ~url:d (to_string (aux_txt txt))
-    | T.Ref (_,d,_) -> ref d
-    | T.Target (_,d) -> pre d (* TODO: have a [Code _] case? *)
-    | T.Special_ref _ -> s "<ocamldoc special ref>"
-  and aux_tag (t:T.tag) : t =
-    let tag = match t with
-      | T.Author s -> OT_author s
-      | T.Version s -> OT_version s
-      | T.See (sr,d) -> OT_see (aux_sr sr, aux_txt d)
-      | T.Since s -> OT_since s
-      | T.Before (s,d) -> OT_before (s, aux_txt d)
-      | T.Deprecated d -> OT_deprecated (aux_txt d)
-      | T.Param (s,d) -> OT_param (s, aux_txt d)
-      | T.Raised_exception (s,d) -> OT_raised_exception (s, aux_txt d)
-      | T.Return_value d -> OT_return_value (aux_txt d)
-      | T.Inline -> OT_inline
-      | T.Custom (s,d) -> OT_custom (s, aux_txt d)
-      | T.Canonical s -> OT_canonical s
-    in
-    mk_ (OCamldoc_tag tag)
-  and aux_sr = function
-    | T.See_url url -> See_url url
-    | T.See_file f -> See_file f
-    | T.See_doc d -> See_doc d
-  in
-  aux_t d
-
-let of_string (s:string): (t, _) result =
-  let open Octavius.Errors in
-  let pp_loc out {line;column} = Fmt.fprintf out "%d:%d" line column in
-  match Octavius.parse (Lexing.from_string s) with
-  | Error {error; location={start; finish } } ->
-    Error (Format.asprintf
-        "@[invalid ocamldoc comment (@[%a .. %a@]):@ %a@]"
-        pp_loc start pp_loc finish Fmt.text @@ Octavius.Errors.message error)
-  | Ok x ->
-    Ok (of_octavius x)
-
-let of_string_exn s : t =
-  match of_string s with
-  | Ok x -> x
-  | Error e -> failwith @@ Printf.sprintf "expected valid document,@ %s" e
-
-module H = Tyxml.Html
-type 'a html = ([> Html_types.div] as 'a) H.elt
-
-(* adapted from jymandra *)
-let to_html_elt (doc:t) : _ H.elt =
-  let mk_header ?a ~depth l : _ html = match depth with
-    | 1 -> H.h1 ?a l
-    | 2 -> H.h2 ?a l
-    | 3 -> H.h3 ?a l
-    | 4 -> H.h4 ?a l
-    | 5 -> H.h5 ?a l
-    | n when n>=6 -> H.h6 ?a l
-    | _ -> assert false
-  in
-  let rec aux ~depth (doc:t) : _ html =
-    (* obtain HTML attributes *)
-    let a =
-      CCList.filter_map
-        (function
-          | A_color s -> Some (H.a_style ("color:"^s))
-          | A_class s -> Some (H.a_class [s])
-          | A_custom _ -> None)
-        (attrs doc)
-    in
-    aux_content ~a ~depth doc
-  and aux_content ~a ~depth doc : _ html=
-    match view doc with
-    | Section s -> mk_header ~a ~depth [H.txt s]
-    | String s -> H.txt s
-    | Text s -> H.txt s
-    | Pre s -> H.pre ~a [H.txt s]
-    | List {l;_} ->
-      H.ul ~a:(H.a_class ["list-group"] :: a)
-        (List.map (fun sub -> H.li ~a:[H.a_class ["list-group-item"]] [aux ~depth sub]) l)
-    | Block l ->
-      H.div ~a:(H.a_class ["container"]::a) (List.map (aux ~depth) l)
-    | V_block l ->
-      (* insert paragraphs for skipping lines *)
-      H.div ~a (CCList.flat_map (fun d -> [aux ~depth d; H.p []]) l)
-    | Indented (s,sub) ->
-      let depth = depth+1 in
-      H.div ~a [
-        mk_header ~a ~depth [H.txt s];
-        aux ~depth sub;
-      ]
-    | Tbl {headers;rows} ->
-      let hd =
-        headers
-        |> CCOpt.map (fun row ->
-            H.thead [
-              H.tr @@
-              List.map
-                (fun s -> H.th ~a:[H.a_class ["m-1"; "p-1"]] [H.txt s])
-                row
-            ])
-      and rows =
-        rows
-        |> List.map (fun row ->
-            H.tr @@
-            List.map
-              (fun s -> H.td ~a:[H.a_class ["m-1"; "p-1"]] [aux ~depth s])
-              row
-          )
-      in
-      H.div ~a:[H.a_class ["container"]] [
-        H.table ?thead:hd ~a:[H.a_class ["table"]] rows
-      ]
-    | Graphviz s ->
-      H.div [
-        H.h4 [H.txt "graphviz"];
-        H.pre [H.txt s];
-      ]
-      (* TODO
-      let id = "graphviz-" ^ (Uuidm.v `V4 |> Uuidm.to_string) in
-      H.div ~a:[H.a_class ["imandra-graphviz"]; H.a_id id]
-        [ H.textarea ~a:[H.a_style "display: none"] (H.txt s)
-        ; H.button ~a:[H.a_class ["btn"; "btn-primary"]] [(H.txt "Load graph")]
-        ; H.div ~a:[H.a_class ["imandra-graphviz-loading"; "display-none"]] [(H.txt "Loading..")]
-        ; H.div ~a:[H.a_class ["imandra-graphviz-target"]] []
-        ; H.txt  (H.Unsafe.data (graphviz_js id))
-        ]
-         *)
-    | Enum l ->
-      H.ol ~a:(H.a_class ["list-group"] :: a)
-        (List.map (fun sub -> H.li ~a:(H.a_class["list-group-item"]::a) [aux ~depth sub]) l)
-    | Bold d -> H.b ~a [H.txt @@ to_string d]
-    | Italic d -> H.i ~a [H.txt @@ to_string d]
-    | Url {url;txt} -> H.a ~a:[H.a_href url] [H.txt txt]
-    | OCamldoc_ref _
-    | OCamldoc_tag _ -> H.txt @@ to_string doc
-    | Fold { folded_by_default; summary=sum; sub=d' } ->
-      H.details
-        (H.summary [H.txt sum])
-        ~a:((if folded_by_default then [] else [H.a_open()])@[H.a_class["summary"]])
-        [aux ~depth d']
-    | Alternatives {views=vs; _} ->
-      (* TODO : do better than a list. maybe a web component for tabs,
-         defined in a prelude above? *)
-      H.div [aux ~depth @@ v_block @@
-           List.map (fun (s,x) -> fold ~summary:s ~folded_by_default:true x) vs
-          ]
-    | Regions rs ->
-      let aux_region {constraints;invariant} =
-        H.div ~a:[H.a_class ["container"; "border"; "border-primary"]] [
-          H.h4 [H.txt "constraints"];
-          H.ul ~a:[H.a_class ["container"; "list-group"]] @@
-          List.map (fun x ->
-              H.li ~a:[H.a_class ["list-group-item"; "m-1"; "p-1"]] [H.pre[H.txt x]])
-            constraints;
-          H.h4 [H.txt "invariant"];
-          H.pre [H.txt invariant];
-        ]
-      in
-      H.div ~a:[H.a_class ["container"]] [
-        H.h3 [H.txt "regions"];
-        H.ul ~a:[H.a_class ["list-group"]] @@
-        List.map (fun r ->
-            H.li ~a:[H.a_class ["list-group-item"]] [aux_region r])
-          rs
-      ]
-    | Html h ->
-      H.div [h] (* now that's an easy one! *)
-  in
-  H.div [aux ~depth:3 doc]
-
-let to_html_doc ?(title="doc") ?meta:(my_meta=[]) (doc:t) : H.doc =
-  let style0 =
-    let l = [
-      "table.framed { border: 2px solid black; }";
-      "table.framed th, table.framed td { border: 1px solid black; }";
-      "th, td { padding: 3px; }";
-    ] in
-    H.style (CCList.map H.txt l)
-  in
-  let b_style = H.link ~rel:[`Stylesheet]
-      ~href:"https://maxcdn.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" ()
-  in
-  H.html
-    (H.head (H.title @@ H.txt title) [
-        style0;
-        b_style;
-        H.meta ~a:(H.a_charset "utf-8" :: my_meta) ();
-      ])
-    (H.body [
-        H.div ~a:[H.a_class ["container"]] [to_html_elt doc]
-      ])
-
-let to_string_html_elt d : string =
-  Fmt.asprintf "%a@." (Tyxml.Html.pp_elt()) (to_html_elt d)
-
-let to_string_html_doc ?title ?meta d : string =
-  Fmt.asprintf "%a@." (Tyxml.Html.pp()) (to_html_doc ?title ?meta d)
+module Unsafe_ = struct
+  let html_of_string s : html = s
+end

@@ -1,0 +1,7 @@
+
+(library
+  (name imandra_document_octavius)
+  (public_name imandra-document.octavius)
+  (optional)
+  (libraries imandra-document octavius containers)
+  (flags :standard -open Imandra_document))

@@ -9,13 +9,15 @@ bug-reports: "Grant Passmore <grant@aestheticintegration.com>"
 dev-repo: "git://github.com/AestheticIntegration/imandra-document.git"
 build: [
   ["dune" "build" "-p" name "-j" jobs]
+  ["dune" "runtest" "-p" name "-j" jobs] {with-test}
 ]
 depends: [
   "dune" { >= "1.1" }
-  "zarith"
   "containers" { >= "3.0" & < "4.0" }
-  "base-bytes"
-  "octavius"
+  "zarith"
   "ocaml" { >= "4.08" & < "4.09" }
+]
+depopts: [
+  "octavius"
   "tyxml"
 ]

@@ -13,8 +13,9 @@ jobs:
     - uses: avsm/setup-ocaml@master
       with:
         ocaml-version: ${{ matrix.ocaml-version }}
-    - run: opam pin -n .
+    - run: opam pin -y -n .
     - run: opam depext -yt imandra-document
     - run: opam install -t . --deps-only
+    - run: opam install octavius
     - run: opam exec -- dune build
     - run: opam exec -- dune runtest
