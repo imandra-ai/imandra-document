@@ -174,7 +174,7 @@ let pp_list_ p =
 let pp_list_sp_ p =
   Format.pp_print_list ~pp_sep:(fun out () -> Format.fprintf out "@ ") p
 
-type style = Compact | Wide
+type style = Compact | Wide | Markdown
 
 let rec pp_with (style:style) out (d:t) : unit =
   (* print within colors? *)
@@ -186,7 +186,11 @@ and pp_content style out d =
   let pp = pp_with style in
   let pp' out d = Fmt.fprintf out "@[%a@]" (pp_with style) d in
   match view d with
-  | Section sec -> Fmt.fprintf out "@{<Blue>@[<h>%s@]@}" sec
+  | Section sec ->
+    begin match style with
+      | Markdown -> Fmt.fprintf out "@[## %s@]" sec
+      | Wide | Compact -> Fmt.fprintf out "@{<Blue>@[<h>%s@]@}" sec
+    end
   | String msg -> Fmt.string out msg
   | Text msg -> Format.fprintf out "@[%a@]" Format.pp_print_text msg
   | Pre msg when String.contains msg '\n' ->
@@ -205,7 +209,7 @@ and pp_content style out d =
   | V_block l ->
     (* vertical block *)
     begin match style with
-      | Wide ->
+      | Wide | Markdown ->
         Fmt.fprintf out "@[<v>%a@]" (Fmt.list ~sep:(Fmt.return "@,@,") pp) l
       | Compact ->
         Fmt.fprintf out "@[<v>%a@]" (Fmt.list ~sep:(Fmt.return "@,") pp) l
@@ -213,11 +217,31 @@ and pp_content style out d =
   | List {l;bullet} ->
     let pp_item out x = Fmt.fprintf out "@[<2>%s@[%a@]@]" bullet pp x in
     Fmt.fprintf out "@[<v>%a@]" (pp_list_ pp_item) l
+
+  | Tbl {headers;rows} when style = Markdown ->
+    (* TODO: github markdown tables? *)
+    let pp_row out r = Format.fprintf out "@[<hv>%a@]" (pp_list_sp_ pp') r in
+    let pp_headers out () =
+      match headers with
+      | Some hds ->
+        let li = String.make 76 '-' in
+        Format.fprintf out "%a@,%s@," (pp_list_ Format.pp_print_string) hds li;
+      | None -> () in
+    let pp_rows out () =
+      List.iteri
+        (fun i row ->
+           if i=0 then pp_row out row
+           else Format.fprintf out "@,%a" pp_row row)
+        rows;
+    in
+    (* indent by 4 to force layout *)
+    Fmt.fprintf out "    @[<v>%a%a@]" pp_headers () pp_rows ();
+
   | Tbl {headers;rows} ->
     let li = lazy (String.make 76 '-') in
     let pp_li out () = match style with
       | Wide -> Format.fprintf out "%s@," (Lazy.force li)
-      | Compact -> ()
+      | Compact | Markdown -> ()
     in
     let pp_row out r = Format.fprintf out "@[<hv>%a@]" (pp_list_sp_ pp') r in
     begin match headers with
@@ -231,10 +255,12 @@ and pp_content style out d =
          else Format.fprintf out "@,%a%a" pp_li () pp_row row)
       rows;
     Format.fprintf out "@]}"
+
   | Graphviz _ -> Fmt.string out "<graph>"
   | Enum l ->
     let n = Stdlib.ref 0 in
-    let pp_item out x : unit = incr n; Fmt.fprintf out "@[<2>%d. @[%a@]@]" !n pp x in
+    let pp_item out x : unit =
+      incr n; Fmt.fprintf out "@[<2>%d. @[%a@]@]" !n pp x in
     Fmt.fprintf out "@[<v>%a@]" (pp_list_ pp_item) l
   | Bold t ->
     Fmt.fprintf out "@{<bold>%a@}" pp t
@@ -284,17 +310,19 @@ and pp_ocamldoc_see_ref out = function
   | See_file f -> Fmt.fprintf out "@@see file %S" f
   | See_doc d -> Fmt.fprintf out "@@see %s" d
 
-let default_style_ = Compact
+let default_style_ = Wide
 
 let pp_ocamldoc_tag = pp_ocamldoc_tag_with default_style_
 let pp = pp_with default_style_
 let to_string = CCFormat.to_string pp
 
 let pp_compact = pp_with Compact
+let pp_markdown = pp_with Markdown
 let pp_wide = pp_with Wide
 
 let to_string_compact = CCFormat.to_string pp_compact
 let to_string_wide = CCFormat.to_string pp_wide
+let to_string_markdown = CCFormat.to_string pp_markdown
 
 (** {2 Graph Builder} *)
 module Graph = struct
