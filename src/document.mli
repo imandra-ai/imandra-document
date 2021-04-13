@@ -84,6 +84,7 @@ type view =
           and each one has its own label. *)
   | Regions of region list (** Special view for decomposition (see {!region}) *)
   | Html of html
+  | Record of (string * t) list (** record, set of key/value pairs *)
 
 and html = private string
 

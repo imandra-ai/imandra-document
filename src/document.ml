@@ -53,6 +53,7 @@ type view =
     }
   | Regions of region list
   | Html of html
+  | Record of (string * t) list (** record, set of key/value pairs *)
 
 and html = string
 
@@ -142,7 +143,7 @@ let alternatives ?a l =
 let regions l = mk_ @@ Regions l
 let html h = mk_ @@ Html h
 
-let record ?a l = tbl_of_rows ?a (fun (k,v) -> [bold (s k); v]) l
+let record ?a l = mk_ ?a @@ Record l
 
 let intersperse sep l =
   List.fold_left
@@ -186,13 +187,16 @@ and pp_content style out d =
   let pp = pp_with style in
   let pp' out d = Fmt.fprintf out "@[%a@]" (pp_with style) d in
   match view d with
+
   | Section sec ->
     begin match style with
       | Markdown -> Fmt.fprintf out "@[## %s@]" sec
       | Wide | Compact -> Fmt.fprintf out "@{<Blue>@[<h>%s@]@}" sec
     end
+
   | String msg -> Fmt.string out msg
   | Text msg -> Format.fprintf out "@[%a@]" Format.pp_print_text msg
+
   | Pre msg when String.contains msg '\n' ->
     (* code-block *)
     Fmt.fprintf out "```@[<v>";
@@ -206,6 +210,7 @@ and pp_content style out d =
   | Indented (head, body) ->
     Fmt.fprintf out "@[<v2>%s::@ %a@]" head pp body
   | Block l -> Fmt.fprintf out "@[%a@]" (pp_list_ pp) l
+
   | V_block l ->
     (* vertical block *)
     begin match style with
@@ -214,9 +219,20 @@ and pp_content style out d =
       | Compact ->
         Fmt.fprintf out "@[<v>%a@]" (Fmt.list ~sep:(Fmt.return "@,") pp) l
     end
+
   | List {l;bullet} ->
     let pp_item out x = Fmt.fprintf out "@[<2>%s@[%a@]@]" bullet pp x in
     Fmt.fprintf out "@[<v>%a@]" (pp_list_ pp_item) l
+
+  | Record l when style = Markdown ->
+    Fmt.fprintf out "@[<v>";
+    List.iter (fun (k,v) -> Fmt.fprintf out "@[<2>- %s:@ %a@]@," k pp' v) l;
+    Fmt.fprintf out "@]";
+
+  | Record l ->
+    Fmt.fprintf out "{@[<v>";
+    List.iter (fun (k,v) -> Fmt.fprintf out "@[<2>%s:@ %a@]@," k pp' v) l;
+    Fmt.fprintf out "@]}"
 
   | Tbl {headers;rows} when style = Markdown ->
     (* TODO: github markdown tables? *)

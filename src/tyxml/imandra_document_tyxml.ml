@@ -77,6 +77,10 @@ let to_html_elt (doc:D.t) : _ H.elt =
       H.div ~a:[H.a_class ["container"]] [
         H.table ?thead:hd ~a:[H.a_class ["table"]] rows
       ]
+    | Record l ->
+      (* convert to table on the fly *)
+      let d = D.tbl_of_rows (fun (k,v) -> [D.s_f "%s:" k; v]) l in
+      aux_content ~a ~depth d
     | Graphviz s ->
       H.div [
         H.h4 [H.txt "graphviz"];
