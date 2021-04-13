@@ -316,11 +316,19 @@ end
 
 (** {2 Rendering} *)
 
-val pp : Format.formatter -> t -> unit
+type 'a printer = Format.formatter -> 'a -> unit
+
+val pp_compact : t printer
+val pp_wide : t printer
+
+val pp : t printer
 (** Regular pretty printer *)
 
 val pp_ocamldoc_tag : Format.formatter -> ocamldoc_tag -> unit
 val pp_ocamldoc_see_ref : Format.formatter -> ocamldoc_see_ref -> unit
+
+val to_string_compact : t -> string
+val to_string_wide : t -> string
 
 val to_string : t -> string
 

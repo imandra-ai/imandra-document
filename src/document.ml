@@ -167,44 +167,58 @@ module A = struct
   let cls c = A_class c
 end
 
+type 'a printer = Format.formatter -> 'a -> unit
+
 let pp_list_ p =
   Format.pp_print_list ~pp_sep:(fun out () -> Format.pp_print_cut out ()) p
 let pp_list_sp_ p =
   Format.pp_print_list ~pp_sep:(fun out () -> Format.fprintf out "@ ") p
 
-let rec pp out (d:t) : unit =
+type style = Compact | Wide
+
+let rec pp_with (style:style) out (d:t) : unit =
   (* print within colors? *)
   match CCList.find_map (function A_color s -> Some s | _ -> None) d.attrs with
-  | None -> pp_content out d
+  | None -> pp_content style out d
   | Some c ->
-    Fmt.fprintf out "@{<%s>%a@}" c pp_content d
-and pp' out d = Fmt.fprintf out "@[%a@]" pp d
-and pp_content out d = match view d with
+    Fmt.fprintf out "@{<%s>%a@}" c (pp_content style) d
+and pp_content style out d =
+  let pp = pp_with style in
+  let pp' out d = Fmt.fprintf out "@[%a@]" (pp_with style) d in
+  match view d with
   | Section sec -> Fmt.fprintf out "@{<Blue>@[<h>%s@]@}" sec
   | String msg -> Fmt.string out msg
   | Text msg -> Format.fprintf out "@[%a@]" Format.pp_print_text msg
   | Pre msg when String.contains msg '\n' ->
     (* code-block *)
-    Fmt.fprintf out "`@[<v>";
+    Fmt.fprintf out "```@[<v>";
     String.iter
       (function
         | '\n' -> Format.fprintf out "@,"
         | c -> Format.pp_print_char out c)
       msg;
-    Fmt.fprintf out "@]`"
+    Fmt.fprintf out "@]```"
   | Pre msg -> Fmt.fprintf out "`%s`" msg
   | Indented (head, body) ->
     Fmt.fprintf out "@[<v2>%s::@ %a@]" head pp body
   | Block l -> Fmt.fprintf out "@[%a@]" (pp_list_ pp) l
   | V_block l ->
-    (* vertical block separated by empty lines *)
-    Fmt.fprintf out "@[<v>%a@]" (Fmt.list ~sep:(Fmt.return "@,@,") pp) l
+    (* vertical block *)
+    begin match style with
+      | Wide ->
+        Fmt.fprintf out "@[<v>%a@]" (Fmt.list ~sep:(Fmt.return "@,@,") pp) l
+      | Compact ->
+        Fmt.fprintf out "@[<v>%a@]" (Fmt.list ~sep:(Fmt.return "@,") pp) l
+    end
   | List {l;bullet} ->
     let pp_item out x = Fmt.fprintf out "@[<2>%s@[%a@]@]" bullet pp x in
     Fmt.fprintf out "@[<v>%a@]" (pp_list_ pp_item) l
   | Tbl {headers;rows} ->
-    let li = String.make 76 '-' in
-    let pp_li out () = Format.pp_print_string out li in
+    let li = lazy (String.make 76 '-') in
+    let pp_li out () = match style with
+      | Wide -> Format.fprintf out "%s@," (Lazy.force li)
+      | Compact -> ()
+    in
     let pp_row out r = Format.fprintf out "@[<hv>%a@]" (pp_list_sp_ pp') r in
     begin match headers with
       | Some hds ->
@@ -214,7 +228,7 @@ and pp_content out d = match view d with
     List.iteri
       (fun i row ->
          if i=0 then pp_row out row
-         else Format.fprintf out "@,%a@,%a" pp_li () pp_row row)
+         else Format.fprintf out "@,%a%a" pp_li () pp_row row)
       rows;
     Format.fprintf out "@]}"
   | Graphviz _ -> Fmt.string out "<graph>"
@@ -226,7 +240,7 @@ and pp_content out d = match view d with
     Fmt.fprintf out "@{<bold>%a@}" pp t
   | Italic t -> pp out t (* no way of rendering this *)
   | Url {url; txt} -> Fmt.fprintf out "[%s](@{<green>%s@})" txt url (* markdown style *)
-  | OCamldoc_tag tag -> pp_ocamldoc_tag out tag
+  | OCamldoc_tag tag -> pp_ocamldoc_tag_with style out tag
   | OCamldoc_ref s -> Fmt.fprintf out "{!%s}" s
   | Fold {sub;_} -> pp out sub
   | Alternatives {views=l} ->
@@ -249,7 +263,9 @@ and pp_content out d = match view d with
       Fmt.(list ~sep:(return "@\n") pp_region) rgs
   | Html html -> Format.fprintf out "@[<hv>```html@,%s@,```@]" (html:>string)
 
-and pp_ocamldoc_tag out = function
+and pp_ocamldoc_tag_with style out =
+  let pp = pp_with style in
+  function
   | OT_canonical s -> Fmt.fprintf out "@@canonical %s" s
   | OT_author s -> Fmt.fprintf out "@@author %s" s
   | OT_version s -> Fmt.fprintf out "@@version %s" s
@@ -268,7 +284,17 @@ and pp_ocamldoc_see_ref out = function
   | See_file f -> Fmt.fprintf out "@@see file %S" f
   | See_doc d -> Fmt.fprintf out "@@see %s" d
 
+let default_style_ = Compact
+
+let pp_ocamldoc_tag = pp_ocamldoc_tag_with default_style_
+let pp = pp_with default_style_
 let to_string = CCFormat.to_string pp
+
+let pp_compact = pp_with Compact
+let pp_wide = pp_with Wide
+
+let to_string_compact = CCFormat.to_string pp_compact
+let to_string_wide = CCFormat.to_string pp_wide
 
 (** {2 Graph Builder} *)
 module Graph = struct
