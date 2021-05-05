@@ -237,7 +237,11 @@ and pp_content style out d =
       ) else ()
     in
     Fmt.fprintf out "{@[<hv>";
-    List.iter (fun (k,v) -> Fmt.fprintf out "@[<hv2>@{<bold>%s@}:@ %a@]%t@," k pp' v pp_li) l;
+    List.iteri
+      (fun i (k,v) ->
+         Fmt.fprintf out "@[<hv2>@{<bold>%s@}:@ %a@]" k pp' v;
+         if i>0 then Fmt.fprintf out "%t@," pp_li else Fmt.fprintf out "@,")
+      l;
     Fmt.fprintf out "@]}"
 
   | Tbl {headers;rows} when style = Markdown ->
