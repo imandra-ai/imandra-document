@@ -230,8 +230,14 @@ and pp_content style out d =
     Fmt.fprintf out "@]";
 
   | Record l ->
+    let pp_li out =
+      if style = Wide then (
+        let li = String.make 76 '-' in
+        Fmt.fprintf out "@,%s" li
+      ) else ()
+    in
     Fmt.fprintf out "{@[<hv>";
-    List.iter (fun (k,v) -> Fmt.fprintf out "@[<hv2>@{<bold>%s@}:@ %a@]@," k pp' v) l;
+    List.iter (fun (k,v) -> Fmt.fprintf out "@[<hv2>@{<bold>%s@}:@ %a@]%t@," k pp' v pp_li) l;
     Fmt.fprintf out "@]}"
 
   | Tbl {headers;rows} when style = Markdown ->
