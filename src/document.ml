@@ -233,14 +233,14 @@ and pp_content style out d =
     let pp_li out =
       if style = Wide then (
         let li = String.make 76 '-' in
-        Fmt.fprintf out "@,%s" li
+        Fmt.fprintf out "%s@," li
       ) else ()
     in
     Fmt.fprintf out "{@[<hv>";
     List.iteri
       (fun i (k,v) ->
-         Fmt.fprintf out "@[<hv2>@{<bold>%s@}:@ %a@]" k pp' v;
-         if i>0 then Fmt.fprintf out "%t@," pp_li else Fmt.fprintf out "@,")
+         if i>0 then pp_li out;
+         Fmt.fprintf out "@[<hv2>@{<bold>%s@}:@ %a@]@," k pp' v)
       l;
     Fmt.fprintf out "@]}"
 
