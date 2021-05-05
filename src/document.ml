@@ -226,12 +226,12 @@ and pp_content style out d =
 
   | Record l when style = Markdown ->
     Fmt.fprintf out "@[<v>";
-    List.iter (fun (k,v) -> Fmt.fprintf out "@[<2>- %s:@ %a@]@," k pp' v) l;
+    List.iter (fun (k,v) -> Fmt.fprintf out "@[<2>- @{<Bold>@}%s:@ %a@]@," k pp' v) l;
     Fmt.fprintf out "@]";
 
   | Record l ->
     Fmt.fprintf out "{@[<v>";
-    List.iter (fun (k,v) -> Fmt.fprintf out "@[<hv2>%s:@ %a@]@," k pp' v) l;
+    List.iter (fun (k,v) -> Fmt.fprintf out "@[<hv2>@{<Bold>%s@}:@ %a@]@," k pp' v) l;
     Fmt.fprintf out "@]}"
 
   | Tbl {headers;rows} when style = Markdown ->
