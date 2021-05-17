@@ -206,9 +206,13 @@ let to_html_elt (doc:D.t) : _ H.elt =
 let to_html_doc ?title ?meta ?headers doc =
   Mapper.run_doc ?title ?meta ?headers Mapper.default doc
 
-let to_string_html_elt d : string =
-  Format.asprintf "%a@." (Tyxml.Html.pp_elt()) (to_html_elt d)
+let string_of_html_doc d : string =
+  Format.asprintf "%a@." (Tyxml.Html.pp()) d
+
+let string_of_html_elt d : string =
+  Format.asprintf "%a@." (Tyxml.Html.pp_elt()) d
+
+let to_string_html_elt d : string = string_of_html_elt @@ to_html_elt d
 
 let to_string_html_doc ?title ?meta ?headers d : string =
-  Format.asprintf "%a@." (Tyxml.Html.pp())
-    (to_html_doc ?title ?meta ?headers d)
+  string_of_html_doc @@ to_html_doc ?title ?meta ?headers d

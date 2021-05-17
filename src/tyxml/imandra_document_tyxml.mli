@@ -30,6 +30,9 @@ val to_doc : [`Div] Tyxml.Html.elt -> t
 val to_html_elt : t -> [> Html_types.div ] H.elt
 val to_string_html_elt : t -> string
 
+val string_of_html_elt : [< Html_types.div ] H.elt -> string
+val string_of_html_doc : H.doc -> string
+
 val to_html_doc :
   ?title:string ->
   ?meta:[< Html_types.meta_attrib > `Charset ] H.attrib list ->
