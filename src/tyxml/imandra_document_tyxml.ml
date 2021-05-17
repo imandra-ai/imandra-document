@@ -38,8 +38,9 @@ let to_html_elt (doc:D.t) : _ H.elt =
   and aux_content ~a ~depth doc : _ div_html=
     match view doc with
     | Section s -> mk_header ~a ~depth [H.txt s]
-    | String s -> H.txt s
-    | Text s -> H.txt s
+    | String s | Text s ->
+      let h = H.txt s in
+      if a=[] then h else H.span ~a [h]
     | Pre s -> H.pre ~a [H.txt s]
     | List {l;_} ->
       H.ul ~a:(H.a_class ["list-group"] :: a)
