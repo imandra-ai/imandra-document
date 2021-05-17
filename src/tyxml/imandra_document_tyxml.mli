@@ -7,6 +7,8 @@ module Mapper : sig
   type doc = t
   type t = {
     to_doc: t -> depth:int -> doc -> Html_types.div_content_fun H.elt;
+    attr_header: t -> col:int -> string -> Html_types.th_attrib H.attrib list;
+    attr_row: t -> row:int -> col:int -> doc -> Html_types.td_attrib H.attrib list;
   }
   (** Translate a document to html *)
 

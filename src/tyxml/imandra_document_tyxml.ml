@@ -17,6 +17,8 @@ module Mapper = struct
 
   type t = {
     to_doc: t -> depth:int -> doc -> Html_types.div_content_fun H.elt;
+    attr_header: t -> col:int -> string -> Html_types.th_attrib H.attrib list;
+    attr_row: t -> row:int -> col:int -> doc -> Html_types.td_attrib H.attrib list;
   }
 
   let mk_header ?a ~depth l : _ div_html = match depth with
@@ -29,6 +31,10 @@ module Mapper = struct
     | _ -> assert false
 
   let default : t = {
+    attr_header = (fun _self ~col:_ _s -> [H.a_class ["m-1"; "p-1"]]);
+
+    attr_row = (fun _self ~row:_ ~col:_ _d -> [H.a_class ["m-1"; "p-1"]]);
+
     to_doc = fun self ~depth doc ->
       let recur ~depth d =
         self.to_doc self ~depth d
@@ -81,16 +87,20 @@ module Mapper = struct
             |> CCOpt.map (fun row ->
                 H.thead [
                   H.tr @@
-                  List.map
-                    (fun s -> H.th ~a:[H.a_class ["m-1"; "p-1"]] [H.txt s])
+                  List.mapi
+                    (fun i s ->
+                       let a = self.attr_header self ~col:i s in
+                       H.th ~a [H.txt s])
                     row
                 ])
           and rows =
             rows
-            |> List.map (fun row ->
+            |> List.mapi (fun i_row row ->
                 H.tr @@
-                List.map
-                  (fun s -> H.td ~a:[H.a_class ["m-1"; "p-1"]] [recur ~depth s])
+                List.mapi
+                  (fun i_col s ->
+                     let a = self.attr_row self ~row:i_row ~col:i_col s in
+                     H.td ~a [recur ~depth s])
                   row
               )
           in
