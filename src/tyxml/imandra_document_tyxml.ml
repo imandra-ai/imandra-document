@@ -139,7 +139,8 @@ let to_html_elt (doc:D.t) : _ H.elt =
   in
   H.div [aux ~depth:3 doc]
 
-let to_html_doc ?(title="doc") ?meta:(my_meta=[]) (doc:D.t) : H.doc =
+let to_html_doc ?(title="doc") ?meta:(my_meta=[])
+    ?(headers : Html_types.head_content_fun H.elt list =[]) (doc:D.t) : H.doc =
   let style0 =
     let l = [
       "table.framed { border: 2px solid black; }";
@@ -152,11 +153,11 @@ let to_html_doc ?(title="doc") ?meta:(my_meta=[]) (doc:D.t) : H.doc =
       ~href:"https://maxcdn.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" ()
   in
   H.html
-    (H.head (H.title @@ H.txt title) [
+    (H.head (H.title @@ H.txt title) @@ [
         style0;
         b_style;
         H.meta ~a:(H.a_charset "utf-8" :: my_meta) ();
-      ])
+      ] @ headers)
     (H.body [
         H.div ~a:[H.a_class ["container"]] [to_html_elt doc]
       ])
@@ -164,5 +165,6 @@ let to_html_doc ?(title="doc") ?meta:(my_meta=[]) (doc:D.t) : H.doc =
 let to_string_html_elt d : string =
   Format.asprintf "%a@." (Tyxml.Html.pp_elt()) (to_html_elt d)
 
-let to_string_html_doc ?title ?meta d : string =
-  Format.asprintf "%a@." (Tyxml.Html.pp()) (to_html_doc ?title ?meta d)
+let to_string_html_doc ?title ?meta ?headers d : string =
+  Format.asprintf "%a@." (Tyxml.Html.pp())
+    (to_html_doc ?title ?meta ?headers d)

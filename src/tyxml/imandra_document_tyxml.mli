@@ -12,10 +12,12 @@ val to_string_html_elt : t -> string
 val to_html_doc :
   ?title:string ->
   ?meta:[< Html_types.meta_attrib > `Charset ] H.attrib list ->
+  ?headers:Html_types.head_content_fun H.elt list ->
   t -> H.doc
 
 val to_string_html_doc :
   ?title:string ->
   ?meta:[< Html_types.meta_attrib > `Charset ] H.attrib list ->
+  ?headers:Html_types.head_content_fun H.elt list ->
   t -> string
 (** Toplevel document *)
