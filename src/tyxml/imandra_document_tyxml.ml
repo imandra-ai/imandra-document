@@ -191,7 +191,7 @@ module Mapper = struct
         ~href:"https://maxcdn.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" ()
     in
     let style0 =
-      let l = [|
+      let l = [{|
               body { 
                 font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
                 font-size: 1.1rem;
@@ -276,7 +276,7 @@ module Mapper = struct
             .table td, .table th {
                 padding: .5rem;
             }
-      |] in
+      |}] in
       H.style (CCList.map H.txt l)
     in
     H.html
