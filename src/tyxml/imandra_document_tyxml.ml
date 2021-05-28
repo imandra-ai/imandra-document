@@ -185,7 +185,7 @@ module Mapper = struct
   }
 
   let run_elt (self:t) (doc:D.t) : _ H.elt =
-    H.div [self.to_doc self ~depth:3 doc]
+    H.div [self.to_doc self ~depth:1 doc]
 
   let run_doc
       ?(title="doc") ?meta:(my_meta=[])
