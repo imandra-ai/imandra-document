@@ -18,7 +18,7 @@ type region =
     invariant : string }
 
 type view =
-  | Section of string (* section *)
+  | Section of string * t list (** Section with a title and direct children *)
   | String of string (** raw string *)
   | Text of string (** text with flexible newlines and spaces *)
   | Pre of string (* pre-formatted paragraph *)
@@ -101,7 +101,7 @@ let v_block ?a l = mk_ ?a @@ V_block l
 let empty = block[]
 let block_of ?a f l = block ?a (List.map f l)
 let v_block_of ?a f l = v_block ?a (List.map f l)
-let section ?a s = mk_ ?a @@ Section s
+let section ?a s l = mk_ ?a @@ Section (s,l)
 let section_f ?a s = ksprintf ~f:(section ?a) s
 let paragraph ?a s = mk_ ?a @@ Text s
 let paragraph_f ?a s = ksprintf ~f:(paragraph ?a) s
@@ -187,14 +187,15 @@ and pp_content style out d =
   let pp = pp_with style in
   let pp' out d = Fmt.fprintf out "@[%a@]" (pp_with style) d in
   match view d with
+  | String msg -> Fmt.string out msg
 
-  | Section sec ->
+  | Section (sec,l) ->
     begin match style with
-      | Markdown -> Fmt.fprintf out "@[## %s@]" sec
-      | Wide | Compact -> Fmt.fprintf out "@{<Blue>@[<h>%s@]@}" sec
+      | Markdown -> Fmt.fprintf out "@[@<hv>## %s@%a@]" sec (pp_list_ pp) l
+      | Wide | Compact ->
+        Fmt.fprintf out "@[<hv>@{<Blue>@[<h>%s@]@}%a@]" sec (pp_list_ pp) l
     end
 
-  | String msg -> Fmt.string out msg
   | Text msg -> Format.fprintf out "@[%a@]" Format.pp_print_text msg
 
   | Pre msg when String.contains msg '\n' ->
