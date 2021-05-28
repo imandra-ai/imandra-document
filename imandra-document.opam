@@ -15,7 +15,7 @@ depends: [
   "dune" { >= "1.1" }
   "containers" { >= "3.0" & < "4.0" }
   "zarith"
-  "ocaml" { >= "4.08" & < "4.09" }
+  "ocaml" { >= "4.08" }
 ]
 depopts: [
   "octavius"
