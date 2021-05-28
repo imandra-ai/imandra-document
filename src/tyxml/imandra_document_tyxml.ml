@@ -30,6 +30,15 @@ module Mapper = struct
     | n when n>=6 -> H.h6 ?a l
     | _ -> assert false
 
+  (* translate attributes to html attributes *)
+  let tr_attrs =
+    let open D in
+    CCList.filter_map
+      (function
+        | A_color s -> Some (H.a_style ("color:"^s))
+        | A_class s -> Some (H.a_class [s])
+        | A_custom _ -> None)
+
   let default : t = {
     attr_header = (fun _self ~col:_ _s -> [H.a_class ["col"; "m-1"; "p-1"]]);
 
@@ -43,14 +52,7 @@ module Mapper = struct
       let open D in
 
       (* obtain HTML attributes *)
-      let a =
-        CCList.filter_map
-          (function
-            | A_color s -> Some (H.a_style ("color:"^s))
-            | A_class s -> Some (H.a_class [s])
-            | A_custom _ -> None)
-          (attrs doc)
-      in
+      let a = tr_attrs (attrs doc) in
 
       let rec render_doc ~a ~depth doc =
         match view doc with
@@ -103,7 +105,8 @@ module Mapper = struct
                 H.tr ~a:[H.a_class ["row"]] @@
                 List.mapi
                   (fun i_col s ->
-                     let a = self.attr_row self ~row:i_row ~col:i_col s in
+                     let a1 = tr_attrs @@ D.attrs s in
+                     let a = self.attr_row self ~row:i_row ~col:i_col s @ a1 in
                      H.td ~a [recur ~depth s])
                   row
               )
