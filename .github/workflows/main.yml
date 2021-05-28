@@ -7,10 +7,10 @@ jobs:
     strategy:
       matrix:
         operating-system: [ubuntu-latest]
-        ocaml-version: [ '4.08.1' ]
+        ocaml-compiler: [ '4.08.1', '4.11.0' ]
     steps:
     - uses: actions/checkout@master
-    - uses: avsm/setup-ocaml@master
+    - uses: avsm/setup-ocaml@v2
       with:
         ocaml-version: ${{ matrix.ocaml-version }}
     - run: opam pin -y -n .
