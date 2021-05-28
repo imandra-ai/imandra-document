@@ -136,9 +136,9 @@ val section : ?a:attributes -> string -> t list -> t (** A title section *)
 val section_f : ?a:attributes -> ('a, Format.formatter, unit, t list -> t) format4 -> 'a
 (** {!Format}-aware version of {!section} *)
 
-val s : string -> t (** basic string *)
+val s : ?a:attributes -> string -> t (** basic string *)
 
-val s_f : ('a, Format.formatter, unit, t) format4 -> 'a
+val s_f : ?a:attributes -> ('a, Format.formatter, unit, t) format4 -> 'a
 (** {!Format}-aware version of {!s} *)
 
 val int : int -> t (** Print an integer *)

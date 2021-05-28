@@ -114,7 +114,8 @@ module Mapper = struct
 
         | Record l ->
           (* convert to table on the fly *)
-          let d = D.tbl_of_rows (fun (k,v) -> [D.s_f "%s:" k; v]) l in
+          let d = D.tbl_of_rows
+              (fun (k,v) -> [D.s_f ~a:[A.cls "col-2"] "%s:" k; v]) l in
           render_doc ~depth ~a d
 
         | Graphviz s ->
