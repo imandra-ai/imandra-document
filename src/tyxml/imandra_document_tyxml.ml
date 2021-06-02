@@ -30,10 +30,19 @@ module Mapper = struct
     | n when n>=6 -> H.h6 ?a l
     | _ -> assert false
 
-  let default : t = {
-    attr_header = (fun _self ~col:_ _s -> [H.a_class ["m-1"; "p-1"]]);
+  (* translate attributes to html attributes *)
+  let tr_attrs =
+    let open D in
+    CCList.filter_map
+      (function
+        | A_color s -> Some (H.a_style ("color:"^s))
+        | A_class s -> Some (H.a_class [s])
+        | A_custom _ -> None)
 
-    attr_row = (fun _self ~row:_ ~col:_ _d -> [H.a_class ["m-1"; "p-1"]]);
+  let default : t = {
+    attr_header = (fun _self ~col:_ _s -> [H.a_class ["col"; "m-1"; "p-1"]]);
+
+    attr_row = (fun _self ~row:_ ~col:_ _d -> [H.a_class ["col"; "m-1"; "p-1"]]);
 
     to_doc = fun self ~depth doc ->
       let recur ~depth d =
@@ -43,22 +52,20 @@ module Mapper = struct
       let open D in
 
       (* obtain HTML attributes *)
-      let a =
-        CCList.filter_map
-          (function
-            | A_color s -> Some (H.a_style ("color:"^s))
-            | A_class s -> Some (H.a_class [s])
-            | A_custom _ -> None)
-          (attrs doc)
-      in
+      let a = tr_attrs (attrs doc) in
 
       let rec render_doc ~a ~depth doc =
         match view doc with
-        | Section s -> mk_header ~a ~depth [H.txt s]
-
-        | String s | Text s ->
+        | String s ->
           let h = H.txt s in
           if a=[] then h else H.span ~a [h]
+
+        | Text s -> H.p ~a [H.txt s]
+
+        | Section (s,l) ->
+          H.div
+            (mk_header ~a ~depth [H.txt s] ::
+             List.map (render_doc ~a ~depth:(depth+1)) l)
 
         | Pre s -> H.pre ~a [H.txt s]
 
@@ -75,7 +82,6 @@ module Mapper = struct
           H.div ~a (CCList.flat_map (fun d -> [recur ~depth d; H.p []]) l)
 
         | Indented (s,sub) ->
-          let depth = depth+1 in
           H.div ~a [
             mk_header ~a ~depth [H.txt s];
             recur ~depth sub;
@@ -86,7 +92,7 @@ module Mapper = struct
             headers
             |> CCOpt.map (fun row ->
                 H.thead [
-                  H.tr @@
+                  H.tr ~a:[H.a_class ["row"]] @@
                   List.mapi
                     (fun i s ->
                        let a = self.attr_header self ~col:i s in
@@ -96,10 +102,11 @@ module Mapper = struct
           and rows =
             rows
             |> List.mapi (fun i_row row ->
-                H.tr @@
+                H.tr ~a:[H.a_class ["row"]] @@
                 List.mapi
                   (fun i_col s ->
-                     let a = self.attr_row self ~row:i_row ~col:i_col s in
+                     let a1 = tr_attrs @@ D.attrs s in
+                     let a = self.attr_row self ~row:i_row ~col:i_col s @ a1 in
                      H.td ~a [recur ~depth s])
                   row
               )
@@ -110,7 +117,8 @@ module Mapper = struct
 
         | Record l ->
           (* convert to table on the fly *)
-          let d = D.tbl_of_rows (fun (k,v) -> [D.s_f "%s:" k; v]) l in
+          let d = D.tbl_of_rows
+              (fun (k,v) -> [D.s_f ~a:[A.cls "col-2"] "%s:" k; v]) l in
           render_doc ~depth ~a d
 
         | Graphviz s ->
@@ -181,7 +189,7 @@ module Mapper = struct
   }
 
   let run_elt (self:t) (doc:D.t) : _ H.elt =
-    H.div [self.to_doc self ~depth:3 doc]
+    H.div [self.to_doc self ~depth:1 doc]
 
   let run_doc
       ?(title="doc") ?meta:(my_meta=[])

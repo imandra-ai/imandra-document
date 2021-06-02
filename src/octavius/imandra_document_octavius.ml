@@ -45,7 +45,7 @@ let of_octavius (d:Octavius.Types.t) : t =
     | T.Newline -> assert false
     | T.Title (_,_,d) ->
       (* convert title into a string *)
-      section (Format.asprintf "@[<h>%a@]" pp @@ aux_txt d)
+      section (Format.asprintf "@[<h>%a@]" pp @@ aux_txt d) []
     | T.Ref (T.RK_link,d,Some txt) -> url ~url:d (to_string (aux_txt txt))
     | T.Ref (_,d,_) -> ref d
     | T.Target (_,d) -> pre d (* TODO: have a [Code _] case? *)

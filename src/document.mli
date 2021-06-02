@@ -45,7 +45,7 @@ type region =
     the root of a document. It should be mostly useful for implementing
     a new renderer. *)
 type view =
-  | Section of string (** section (title) *)
+  | Section of string * t list (** section (title + children) *)
   | String of string (** raw string *)
   | Text of string (** text with flexible newlines and spaces *)
   | Pre of string (** pre-formatted paragraph *)
@@ -131,14 +131,14 @@ val v_block : ?a:attributes -> t list -> t (** Vertical block *)
 
 val v_block_of : ?a:attributes -> ('a -> t) -> 'a list -> t (** List.map + {!v_block} *)
 
-val section : ?a:attributes -> string -> t (** A title section *)
+val section : ?a:attributes -> string -> t list -> t (** A title section *)
 
-val section_f : ?a:attributes -> ('a, Format.formatter, unit, t) format4 -> 'a
+val section_f : ?a:attributes -> ('a, Format.formatter, unit, t list -> t) format4 -> 'a
 (** {!Format}-aware version of {!section} *)
 
-val s : string -> t (** basic string *)
+val s : ?a:attributes -> string -> t (** basic string *)
 
-val s_f : ('a, Format.formatter, unit, t) format4 -> 'a
+val s_f : ?a:attributes -> ('a, Format.formatter, unit, t) format4 -> 'a
 (** {!Format}-aware version of {!s} *)
 
 val int : int -> t (** Print an integer *)
