@@ -190,10 +190,13 @@ and pp_content style out d =
   | String msg -> Fmt.string out msg
 
   | Section (sec,l) ->
-    begin match style with
-      | Markdown -> Fmt.fprintf out "@[@<hv>## %s@%a@]" sec (pp_list_ pp) l
-      | Wide | Compact ->
-        Fmt.fprintf out "@[<hv>@{<Blue>@[<h>%s@]@}%a@]" sec (pp_list_ pp) l
+    begin match style, l with
+      | Markdown, [] -> Fmt.fprintf out "@[@<v>## %s@]" sec
+      | Markdown, _ -> Fmt.fprintf out "@[@<v>## %s@ %a@]" sec (pp_list_ pp) l
+      | (Wide | Compact), [] ->
+        Fmt.fprintf out "@{<Blue>@[<h>%s@]@}" sec
+      | (Wide | Compact), _ ->
+        Fmt.fprintf out "@[<v>@{<Blue>@[<h>%s@]@}@ %a@]" sec (pp_list_ pp) l
     end
 
   | Text msg -> Format.fprintf out "@[%a@]" Format.pp_print_text msg
