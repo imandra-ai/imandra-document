@@ -192,7 +192,7 @@ and pp_content style out d =
   | Section (sec,l) ->
     begin match style, l with
       | Markdown, [] -> Fmt.fprintf out "@[@<v>## %s@]" sec
-      | Markdown, _ -> Fmt.fprintf out "@[@<v>## %s@ %a@]" sec (pp_list_ pp) l
+      | Markdown, _ -> Fmt.fprintf out "@[<v>## %s@ %a@]" sec (pp_list_ pp) l
       | (Wide | Compact), [] ->
         Fmt.fprintf out "@{<Blue>@[<h>%s@]@}" sec
       | (Wide | Compact), _ ->
