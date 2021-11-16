@@ -203,13 +203,13 @@ and pp_content style out d =
 
   | Pre msg when String.contains msg '\n' ->
     (* code-block *)
-    Fmt.fprintf out "```@[<v>";
+    Fmt.fprintf out "    @[<v>";
     String.iter
       (function
         | '\n' -> Format.fprintf out "@,"
         | c -> Format.pp_print_char out c)
       msg;
-    Fmt.fprintf out "@]```"
+    Fmt.fprintf out "@]"
   | Pre msg -> Fmt.fprintf out "`%s`" msg
   | Indented (head, body) ->
     Fmt.fprintf out "@[<v2>%s::@ %a@]" head pp body
