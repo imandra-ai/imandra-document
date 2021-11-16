@@ -187,7 +187,7 @@ and pp_content style out d =
   let pp = pp_with style in
   let pp' out d = Fmt.fprintf out "@[%a@]" (pp_with style) d in
   match view d with
-  | String msg -> Fmt.string out msg
+  | String msg -> Fmt.string_lines out msg
 
   | Section (sec,l) ->
     begin match style, l with
@@ -199,17 +199,11 @@ and pp_content style out d =
         Fmt.fprintf out "@[<v>@{<Blue>@[<h>%s@]@}@ %a@]" sec (pp_list_ pp) l
     end
 
-  | Text msg -> Format.fprintf out "@[%a@]" Format.pp_print_text msg
+  | Text msg -> Format.fprintf out "@[%a@]" Fmt.string_lines msg
 
   | Pre msg when String.contains msg '\n' ->
     (* code-block *)
-    Fmt.fprintf out "    @[<v>";
-    String.iter
-      (function
-        | '\n' -> Format.fprintf out "@,"
-        | c -> Format.pp_print_char out c)
-      msg;
-    Fmt.fprintf out "@]"
+    Fmt.fprintf out "    @[<v>%a@]" Fmt.string_lines msg;
   | Pre msg -> Fmt.fprintf out "`%s`" msg
   | Indented (head, body) ->
     Fmt.fprintf out "@[<v2>%s::@ %a@]" head pp body
