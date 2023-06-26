@@ -357,8 +357,8 @@ module Graph = struct
 
   type t = event list
 
-  let n ?lbl name = Node {name; label=CCOpt.get_or ~default:name lbl}
-  let e ?lbl src target = Edge {src;target; label=CCOpt.get_or ~default:"" lbl}
+  let n ?lbl name = Node {name; label=CCOption.get_or ~default:name lbl}
+  let e ?lbl src target = Edge {src;target; label=CCOption.get_or ~default:"" lbl}
   let set_graph_name s = Set_graph_name s
 
   let default_style_dot = "fontname=\"courier\",fontsize=14"

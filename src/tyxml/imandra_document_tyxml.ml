@@ -90,7 +90,7 @@ module Mapper = struct
         | Tbl {headers;rows} ->
           let hd =
             headers
-            |> CCOpt.map (fun row ->
+            |> CCOption.map (fun row ->
                 H.thead [
                   H.tr ~a:[H.a_class ["row"]] @@
                   List.mapi
