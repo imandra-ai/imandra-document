@@ -1,0 +1,5 @@
+(library
+ (name imandra_document_json)
+ (public_name imandra-document.json)
+ (optional)
+ (libraries imandra-document decoders))
