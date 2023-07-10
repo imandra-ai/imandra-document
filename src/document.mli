@@ -1,6 +1,6 @@
-(** {1 Simple Formatted Document} *)
+(** Simple Formatted Document.
 
-(** A {!Document.t} value represents a structured document. It can be
+    A {!Document.t} value represents a structured document. It can be
     rendered in several ways, depending on the frontend (pure text, HTML, …).
 
     In Imandra, a document printer for type [foo] (of type [foo -> Document.t])
@@ -13,8 +13,6 @@
     A good example is in the
     {{: https://docs.imandra.ai/imandra-docs/notebooks/sudoku/} Sudoku solving with Imandra notebook}
 *)
-
-(* This file is free software. See file "license" for more details. *)
 
 (** Attributes for modifying the style of a document
     or influencing rendering in the browser or terminal *)
@@ -258,7 +256,7 @@ val map_opt : ('a -> t) -> 'a option -> t
 (** Transform [Some x] into a document using the function on [x],
     or return {!empty} *)
 
-(** {2 Attribute builders} *)
+(** Attribute builders *)
 module A : sig
   type t = attribute
 
@@ -272,7 +270,7 @@ module A : sig
   val cls: string -> t
 end
 
-(** {2 Graph Builder}
+(** Graph Builder
 
     A convenient module for building simple graphs and turning them into
     Graphviz code.
