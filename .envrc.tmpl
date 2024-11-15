@@ -1,0 +1,13 @@
+# rebuild the environment on `nix-direnv-reload` only
+nix_direnv_manual_reload
+
+# direnv will consider the environment changed if these files change, and
+# nix-direnv will then prompt for the manual reload
+watch_file flake.nix flake.lock onix-lock.json onix-lock-dev.json
+
+# use the flake with the `default` devShell:
+use flake
+
+# To use another devShell, you can use (e.g. for devShell.other:
+# use flake .#other
+

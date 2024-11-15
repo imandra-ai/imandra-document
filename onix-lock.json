@@ -1,0 +1,217 @@
+{
+   "version": "0.0.5",
+   "repositories": [
+     {
+       "url": "https://github.com/ocaml/opam-repository.git",
+       "rev": "a6cd5e92975350b992cb58b4351df6fceefc8144"
+     }
+   ],
+   "packages" : {
+     "base-bigarray": {
+       "version": "base"
+     },
+     "base-domains": {
+       "version": "base",
+       "depends": [
+         "ocaml"
+       ]
+     },
+     "base-nnp": {
+       "version": "base",
+       "depends": [
+         "base-domains"
+       ]
+     },
+     "base-threads": {
+       "version": "base"
+     },
+     "base-unix": {
+       "version": "base"
+     },
+     "conf-gmp": {
+       "version": "4",
+       "src-extra": {
+         "test.c": {
+           "url": "https://raw.githubusercontent.com/ocaml/opam-source-archives/main/patches/conf-gmp/test.c.4",
+           "sha256": "54a30735f1f271a2531526747e75716f4490dd7bc1546efd6498ccfe3cc4d6fb"
+         }
+       },
+       "depexts": [
+         "gmp"
+       ]
+     },
+     "conf-pkg-config": {
+       "version": "3",
+       "depexts": [
+         "pkg-config"
+       ]
+     },
+     "containers": {
+       "version": "3.14",
+       "src": {
+         "url": "https://github.com/c-cube/ocaml-containers/releases/download/v3.14/containers-3.14.tbz",
+         "sha256": "c94fba0c7c54349b7021c31f85120495197ddde438c574d48362ec669bf7e564"
+       },
+       "depends": [
+         "base-threads",
+         "base-unix",
+         "dune",
+         "dune-configurator",
+         "either",
+         "ocaml"
+       ],
+       "build-depends": [
+         "dune",
+         "dune-configurator"
+       ]
+     },
+     "csexp": {
+       "version": "1.5.2",
+       "src": {
+         "url": "https://github.com/ocaml-dune/csexp/releases/download/1.5.2/csexp-1.5.2.tbz",
+         "sha256": "1a14dd04bb4379a41990248550628c77913a9c07f3c35c1370b6960e697787ff"
+       },
+       "depends": [
+         "dune",
+         "ocaml"
+       ],
+       "build-depends": [
+         "dune"
+       ]
+     },
+     "dune": {
+       "version": "3.16.1",
+       "src": {
+         "url": "https://github.com/ocaml/dune/releases/download/3.16.1/dune-3.16.1.tbz",
+         "sha256": "b781ae20f87613c2a11bd0717809e00470c82d615e15264f9a64e033051ac3de"
+       },
+       "depends": [
+         "base-threads",
+         "base-unix",
+         "ocaml"
+       ]
+     },
+     "dune-configurator": {
+       "version": "3.16.1",
+       "src": {
+         "url": "https://github.com/ocaml/dune/releases/download/3.16.1/dune-3.16.1.tbz",
+         "sha256": "b781ae20f87613c2a11bd0717809e00470c82d615e15264f9a64e033051ac3de"
+       },
+       "depends": [
+         "base-unix",
+         "csexp",
+         "dune",
+         "ocaml"
+       ],
+       "build-depends": [
+         "dune"
+       ]
+     },
+     "either": {
+       "version": "1.0.0",
+       "src": {
+         "url": "https://github.com/mirage/either/releases/download/1.0.0/either-1.0.0.tbz",
+         "sha256": "bf674de3312dee7b7215f07df1e8a96eb3d679164b8a918cdd95b8d97e505884"
+       },
+       "depends": [
+         "dune",
+         "ocaml"
+       ],
+       "build-depends": [
+         "dune"
+       ]
+     },
+     "host-arch-unknown": {
+       "version": "1"
+     },
+     "imandra-document": {
+       "version": "dev",
+       "src": { "url": "file://." },
+       "depends": [
+         "containers",
+         "dune",
+         "ocaml",
+         "zarith"
+       ],
+       "build-depends": [
+         "dune"
+       ]
+     },
+     "ocaml": {
+       "version": "5.2.0",
+       "depends": [
+         "ocaml-config",
+         "ocaml-system"
+       ],
+       "build-depends": [
+         "ocaml-system"
+       ]
+     },
+     "ocaml-config": {
+       "version": "3",
+       "src-extra": {
+         "gen_ocaml_config.ml.in": {
+           "url": "https://raw.githubusercontent.com/ocaml/opam-source-archives/main/patches/ocaml-config/gen_ocaml_config.ml.in.3",
+           "sha256": "a9ad8d84a08961159653a978db92d10f694510182b206cacb96d5c9f63b5121e"
+         },
+         "ocaml-config.install": {
+           "url": "https://raw.githubusercontent.com/ocaml/opam-source-archives/main/patches/ocaml-config/ocaml-config.install",
+           "sha256": "6e4fd93f4cce6bad0ed3c08afd0248dbe7d7817109281de6294e5b5ef5597051"
+         }
+       },
+       "depends": [
+         "ocaml-system"
+       ],
+       "build-depends": [
+         "ocaml-system"
+       ]
+     },
+     "ocaml-system": {
+       "version": "5.2.0",
+       "src-extra": {
+         "gen_ocaml_config.ml.in": {
+           "url": "https://raw.githubusercontent.com/ocaml/opam-source-archives/main/patches/ocaml-system/gen_ocaml_config.ml.in",
+           "sha256": "71bcd3d35e28cbf71eda81991c8741268f4b87ced71573b2e75f64f136cebfc1"
+         }
+       },
+       "depends": [
+         "host-arch-unknown"
+       ],
+       "depexts": [
+         "ocaml-ng.ocamlPackages_5_2.ocaml"
+       ]
+     },
+     "ocamlfind": {
+       "version": "1.9.6",
+       "src": {
+         "url": "http://download.camlcity.org/download/findlib-1.9.6.tar.gz",
+         "sha512": "cfaf1872d6ccda548f07d32cc6b90c3aafe136d2aa6539e03143702171ee0199add55269bba894c77115535dc46a5835901a5d7c75768999e72db503bfd83027"
+       },
+       "src-extra": {
+         "0001-Harden-test-for-OCaml-5.patch": {
+           "url": "https://raw.githubusercontent.com/ocaml/opam-source-archives/main/patches/ocamlfind/0001-Harden-test-for-OCaml-5.patch",
+           "sha256": "6fcca5f2f7abf8d6304da6c385348584013ffb8602722a87fb0bacbab5867fe8"
+         }
+       },
+       "depends": [
+         "ocaml"
+       ]
+     },
+     "zarith": {
+       "version": "1.14",
+       "src": {
+         "url": "https://github.com/ocaml/Zarith/archive/release-1.14.tar.gz",
+         "sha256": "5db9dcbd939153942a08581fabd846d0f3f2b8c67fe68b855127e0472d4d1859"
+       },
+       "depends": [
+         "conf-gmp",
+         "conf-pkg-config",
+         "ocaml",
+         "ocamlfind"
+       ],
+       "build-depends": [
+         "ocamlfind"
+       ]
+     }
+   }
+}
