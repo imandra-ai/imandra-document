@@ -47,7 +47,7 @@
           let
             shellHook = pkgs.writeText "onix-lock-shellHook" onixEnv.lock.shellHook;
             lockPatched = pkgs.runCommand "onix-lock-shellHook-patched" { } ''
-              sed 's:--lock-file=/nix/store/.*/onix-lock.json::' "${shellHook}" > "$out"
+              sed 's:--lock-file=/nix/store/.*/onix-lock.json:--lock-file=./onix-lock.json:' "${shellHook}" > "$out"
               chmod +x "$out"
             '';
           in
@@ -60,7 +60,7 @@
           let
             shellHook = pkgs.writeText "onix-lock-dev-shellHook" onixEnvDev.lock.shellHook;
             lockPatched = pkgs.runCommand "onix-lock-dev-shellHook-patched" { } ''
-              sed 's:--lock-file=/nix/store/.*/onix-lock-dev.json::' "${shellHook}" > "$out"
+              sed 's:--lock-file=/nix/store/.*/onix-lock-dev.json:--lock-file=./onix-lock-dev.json:' "${shellHook}" > "$out"
               chmod +x "$out"
             '';
           in
